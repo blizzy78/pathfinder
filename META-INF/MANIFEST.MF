@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: PathFinder
+Bundle-SymbolicName: de.blizzy.pathfinder;singleton:=true
+Bundle-Version: 0.0.1
+Bundle-Vendor: Maik Schreiber
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.swt;bundle-version="3.7.2",
+ org.eclipse.jface;bundle-version="3.7.0"
+Bundle-ClassPath: .,
+ lib/guava-14.0.jar
