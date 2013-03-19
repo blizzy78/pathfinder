@@ -23,6 +23,7 @@ package de.blizzy.pathfinder.actor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -202,6 +203,7 @@ public class World implements IActor {
 	void add(IActor actor) {
 		List<IActor> newActors = new ArrayList<>(Arrays.asList(actors));
 		newActors.add(actor);
+		Collections.sort(newActors, ActorLayerComparator.INSTANCE);
 		actors = newActors.toArray(new IActor[0]);
 
 		if (actor instanceof Road) {
