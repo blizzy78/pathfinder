@@ -108,7 +108,9 @@ public class World implements IActor {
 		TimerTask animationTask = new TimerTask() {
 			@Override
 			public void run() {
-				animateWorld();
+				if (!paused) {
+					animateWorld();
+				}
 			}
 		};
 		timer.scheduleAtFixedRate(animationTask, 0, Math.round(1000d / ANIMATION_FRAMES_PER_SECOND));
@@ -116,7 +118,9 @@ public class World implements IActor {
 		TimerTask redrawTask = new TimerTask() {
 			@Override
 			public void run() {
-				redrawWorld();
+				if (!paused) {
+					redrawWorld();
+				}
 			}
 		};
 		timer.scheduleAtFixedRate(redrawTask, 0, Math.round(1000d / REDRAW_FRAMES_PER_SECOND));
@@ -298,26 +302,24 @@ public class World implements IActor {
 	}
 
 	private void animateWorld() {
-		if (!paused) {
-			List<ListenableFuture<?>> futures = new ArrayList<>(Math.max(actors.length, 1));
-			for (final IActor actor : actors) {
-				Runnable runnable = new Runnable() {
-					@Override
-					public void run() {
-						actor.animate();
-					}
-				};
-				ListenableFuture<?> future = taskExecutor.submit(runnable);
-				futures.add(future);
-			}
+		List<ListenableFuture<?>> futures = new ArrayList<>(Math.max(actors.length, 1));
+		for (final IActor actor : actors) {
+			Runnable runnable = new Runnable() {
+				@Override
+				public void run() {
+					actor.animate();
+				}
+			};
+			ListenableFuture<?> future = taskExecutor.submit(runnable);
+			futures.add(future);
+		}
 
-			try {
-				Futures.allAsList(futures).get();
-			} catch (InterruptedException e) {
-				// ignore
-			} catch (ExecutionException e) {
-				throw new RuntimeException(e.getCause());
-			}
+		try {
+			Futures.allAsList(futures).get();
+		} catch (InterruptedException e) {
+			// ignore
+		} catch (ExecutionException e) {
+			throw new RuntimeException(e.getCause());
 		}
 	}
 
