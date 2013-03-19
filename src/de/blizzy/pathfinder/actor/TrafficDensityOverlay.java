@@ -3,6 +3,7 @@ package de.blizzy.pathfinder.actor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
@@ -17,7 +18,7 @@ public class TrafficDensityOverlay implements IActor {
 	private static final int COLOR_STEPS = 6;
 	private static final int ALPHA = 50;
 
-	private boolean mustRedraw = true;
+	private AtomicBoolean mustRedraw = new AtomicBoolean(true);
 	private long lastCalculation;
 	private TrafficDensity trafficDensity;
 	private ColorRegistry colorRegistry;
@@ -32,7 +33,7 @@ public class TrafficDensityOverlay implements IActor {
 
 	@Override
 	public boolean mustRedraw() {
-		return mustRedraw;
+		return mustRedraw.get();
 	}
 
 	@Override
@@ -53,7 +54,7 @@ public class TrafficDensityOverlay implements IActor {
 			}
 		}
 		gc.setAlpha(oldAlpha);
-		mustRedraw = false;
+		mustRedraw.set(false);
 		return false;
 	}
 
@@ -73,7 +74,7 @@ public class TrafficDensityOverlay implements IActor {
 		if ((now - lastCalculation) >= CALCULATION_INTERVAL) {
 			synchronized (this) {
 				if (trafficDensity.calculate()) {
-					mustRedraw = true;
+					mustRedraw.set(true);
 				}
 			}
 			lastCalculation = now;

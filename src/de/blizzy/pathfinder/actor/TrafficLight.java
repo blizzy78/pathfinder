@@ -39,7 +39,7 @@ public class TrafficLight implements IActor {
 	private int secondsBetweenSwitches = (int) (Math.random() * 5d) + 5;
 	private int framesBetweenSwitches = secondsBetweenSwitches * World.ANIMATION_FRAMES_PER_SECOND;
 	private int frames;
-	private boolean mustRedraw = true;
+	private AtomicBoolean mustRedraw = new AtomicBoolean(true);
 
 	public TrafficLight(World world, Point location) {
 		if (!world.isRoadAt(location) || !world.isRoadAt(new Point(location.x + 1, location.y + 1))) {
@@ -55,7 +55,7 @@ public class TrafficLight implements IActor {
 
 	@Override
 	public boolean mustRedraw() {
-		return mustRedraw;
+		return mustRedraw.get();
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class TrafficLight implements IActor {
 		gc.fillRectangle(location.x * World.CELL_PIXEL_SIZE + location.x * World.CELL_SPACING,
 				(location.y + 2) * World.CELL_PIXEL_SIZE + location.y * World.CELL_SPACING - 1,
 				2, 2);
-		mustRedraw = false;
+		mustRedraw.set(false);
 		return false;
 	}
 
@@ -84,7 +84,7 @@ public class TrafficLight implements IActor {
 		if (frames++ >= framesBetweenSwitches) {
 			northSouthAllowed.set(!northSouthAllowed.get());
 			frames = 0;
-			mustRedraw = true;
+			mustRedraw.set(true);
 		}
 	}
 

@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -49,7 +50,7 @@ public class Vehicle implements IActor {
 	private Direction headedTo = Direction.NORTH;
 	private Mode mode = Mode.DRIVE;
 	private int frames;
-	private boolean mustRedraw = true;
+	private AtomicBoolean mustRedraw = new AtomicBoolean(true);
 	private long parkedTime;
 
 	public Vehicle(World world, Point location) {
@@ -66,7 +67,7 @@ public class Vehicle implements IActor {
 
 	@Override
 	public boolean mustRedraw() {
-		return mustRedraw;
+		return mustRedraw.get();
 	}
 
 	@Override
@@ -79,7 +80,7 @@ public class Vehicle implements IActor {
 		gc.fillRectangle(location.x * World.CELL_PIXEL_SIZE + location.x * World.CELL_SPACING + 1,
 				location.y * World.CELL_PIXEL_SIZE + location.y * World.CELL_SPACING + 1,
 				World.CELL_PIXEL_SIZE - 2, World.CELL_PIXEL_SIZE - 2);
-		mustRedraw = false;
+		mustRedraw.set(false);
 		return false;
 	}
 
@@ -104,7 +105,7 @@ public class Vehicle implements IActor {
 		if (Math.random() < PARK_CHANCE) {
 			mode = Mode.PARK;
 			parkedTime = System.currentTimeMillis();
-			mustRedraw = true;
+			mustRedraw.set(true);
 			return;
 		}
 
@@ -123,14 +124,14 @@ public class Vehicle implements IActor {
 
 			Point newLocation = possibleDirections.get(headedTo);
 			location = newLocation;
-			mustRedraw = true;
+			mustRedraw.set(true);
 		}
 	}
 
 	private void park() {
 		if ((System.currentTimeMillis() - parkedTime) >= PARK_DURATION) {
 			mode = Mode.DRIVE;
-			mustRedraw = true;
+			mustRedraw.set(true);
 		}
 	}
 
