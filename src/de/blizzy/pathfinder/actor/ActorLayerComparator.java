@@ -16,6 +16,7 @@ class ActorLayerComparator implements Comparator<IActor> {
 		classes.add(RoadBlock.class);
 		classes.add(Vehicle.class);
 		classes.add(TrafficLight.class);
+		classes.add(TrafficDensityOverlay.class);
 	}
 
 	private ActorLayerComparator() {}

@@ -66,10 +66,12 @@ public class World implements IActor {
 
 	private int width;
 	private int height;
+	private TrafficDensity trafficDensity;
 	private ColorRegistry colorRegistry;
 	private Canvas canvas;
 	private IActor[] actors = new IActor[0];
 	private Road[] roads = new Road[0];
+	private Vehicle[] vehicles = new Vehicle[0];
 	private Timer timer = new Timer();
 	private boolean initialPaint;
 	private DoubleBuffer doubleBuffer;
@@ -83,6 +85,7 @@ public class World implements IActor {
 		this.width = width;
 		this.height = height;
 
+		trafficDensity = new TrafficDensity(this);
 		colorRegistry = new ColorRegistry(parent.getDisplay());
 
 		canvas = new Canvas(parent, SWT.BORDER | SWT.NO_BACKGROUND);
@@ -211,6 +214,12 @@ public class World implements IActor {
 			newRoads.add((Road) actor);
 			roads = newRoads.toArray(new Road[0]);
 		}
+
+		if (actor instanceof Vehicle) {
+			List<Vehicle> newVehicles = new ArrayList<>(Arrays.asList(vehicles));
+			newVehicles.add((Vehicle) actor);
+			vehicles = newVehicles.toArray(new Vehicle[0]);
+		}
 	}
 
 	ColorRegistry getColorRegistry() {
@@ -256,6 +265,14 @@ public class World implements IActor {
 			}
 			return roads;
 		}
+	}
+
+	Road[] getAllRoads() {
+		return roads;
+	}
+
+	Vehicle[] getAllVehicles() {
+		return vehicles;
 	}
 
 	boolean isRoadAt(Point location) {
@@ -359,5 +376,9 @@ public class World implements IActor {
 
 	public void setPaused(boolean paused) {
 		this.paused = paused;
+	}
+
+	TrafficDensity getTrafficDensity() {
+		return trafficDensity;
 	}
 }

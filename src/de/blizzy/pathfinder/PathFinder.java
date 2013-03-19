@@ -41,6 +41,7 @@ import de.blizzy.pathfinder.actor.Area;
 import de.blizzy.pathfinder.actor.Building;
 import de.blizzy.pathfinder.actor.Road;
 import de.blizzy.pathfinder.actor.RoadBlock;
+import de.blizzy.pathfinder.actor.TrafficDensityOverlay;
 import de.blizzy.pathfinder.actor.TrafficLight;
 import de.blizzy.pathfinder.actor.Vehicle;
 import de.blizzy.pathfinder.actor.World;
@@ -139,12 +140,12 @@ public class PathFinder {
 		}
 
 		// road blocks
-		new RoadBlock(world, new Point(89, 70));
+//		new RoadBlock(world, new Point(89, 70));
 		new RoadBlock(world, new Point(89, 71));
 
 		// vehicles
 		for (int i = 1; i <= 500; i++) {
-			new Vehicle(world, new Point(31, 42));
+			new Vehicle(world, new Point(31, 41));
 		}
 
 		// traffic lights
@@ -153,6 +154,8 @@ public class PathFinder {
 				new TrafficLight(world, new Point(x * 10, y * 10));
 			}
 		}
+
+		new TrafficDensityOverlay(world);
 
 		return world;
 	}

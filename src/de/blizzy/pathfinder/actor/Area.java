@@ -60,4 +60,20 @@ public class Area {
 		return (location.x >= area.x) && (location.y >= area.y) &&
 				(location.x <= bottomRight.x) && (location.y <= bottomRight.y);
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) {
+			return true;
+		} else if ((o != null) && o.getClass().equals(getClass())) {
+			Area other = (Area) o;
+			return other.area.equals(area);
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return area.hashCode();
+	}
 }

@@ -201,4 +201,8 @@ public class Vehicle implements IActor {
 	public boolean contains(Point location) {
 		return location.equals(this.location);
 	}
+
+	Point getLocation() {
+		return location;
+	}
 }

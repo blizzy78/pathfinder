@@ -104,4 +104,8 @@ public class Road implements IActor {
 		}
 		throw new IllegalArgumentException();
 	}
+
+	Area getArea() {
+		return area;
+	}
 }
