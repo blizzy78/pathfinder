@@ -35,25 +35,47 @@ public class Road implements IDrawable {
 	private ColorRegistry colorRegistry;
 	private boolean northSouth;
 	private Area area;
-	private Lane northLane;
-	private Lane westLane;
-	private Lane southLane;
-	private Lane eastLane;
+	private int lanesPerSide;
+	private Lane[] northLanes;
+	private Lane[] westLanes;
+	private Lane[] southLanes;
+	private Lane[] eastLanes;
 
-	public Road(World world, Point location, int length, Direction direction) {
+	public Road(World world, Point location, int lanes, int length, Direction direction) {
+		if (lanes < 2) {
+			throw new IllegalArgumentException("number of lanes must be >= 2"); //$NON-NLS-1$
+		}
+		lanesPerSide = lanes / 2;
+		if ((lanesPerSide * 2) != lanes) {
+			throw new IllegalArgumentException("number of lanes must be a factor of 2"); //$NON-NLS-1$
+		}
+
 		colorRegistry = world.getColorRegistry();
 		northSouth = (direction == Direction.NORTH) || (direction == Direction.SOUTH);
 
 		area = northSouth ?
-				new Area(world, new Rectangle(location.x, location.y, 2, length)) :
-				new Area(world, new Rectangle(location.x, location.y, length, 2));
+				new Area(world, new Rectangle(location.x, location.y, lanes, length)) :
+				new Area(world, new Rectangle(location.x, location.y, length, lanes));
 
 		if (northSouth) {
-			southLane = new Lane(world, new Point(location.x, location.y), length, Direction.SOUTH);
-			northLane = new Lane(world, new Point(location.x + 1, location.y + length - 1), length, Direction.NORTH);
+			southLanes = new Lane[lanesPerSide];
+			northLanes = new Lane[lanesPerSide];
 		} else {
-			westLane = new Lane(world, new Point(location.x + length - 1, location.y), length, Direction.WEST);
-			eastLane = new Lane(world, new Point(location.x, location.y + 1), length, Direction.EAST);
+			westLanes = new Lane[lanesPerSide];
+			eastLanes = new Lane[lanesPerSide];
+		}
+
+		//  x   x+1  x+2  x+3  x+4  x+5
+		//  S   S    S    N    N    N
+
+		for (int i = 0; i < lanesPerSide; i++) {
+			if (northSouth) {
+				northLanes[i] = new Lane(world, new Point(location.x + lanesPerSide + i, location.y + length - 1), length, Direction.NORTH);
+				southLanes[i] = new Lane(world, new Point(location.x + lanesPerSide - i - 1, location.y), length, Direction.SOUTH);
+			} else {
+				westLanes[i] = new Lane(world, new Point(location.x + length - 1, location.y + lanesPerSide - i - 1), length, Direction.WEST);
+				eastLanes[i] = new Lane(world, new Point(location.x, location.y + lanesPerSide + i), length, Direction.EAST);
+			}
 		}
 
 		world.add(this);
@@ -68,15 +90,28 @@ public class Road implements IDrawable {
 	@Override
 	public boolean paint(GC gc, int pass) {
 		Rectangle drawArea = area.getDrawArea();
-		gc.setBackground(colorRegistry.getColor(Lane.COLOR));
-		gc.fillRectangle(drawArea.x + World.CELL_PIXEL_SIZE, drawArea.y + World.CELL_PIXEL_SIZE,
-				northSouth ? 1 : drawArea.width - World.CELL_PIXEL_SIZE, !northSouth ? 1 : drawArea.height - World.CELL_PIXEL_SIZE);
-		gc.setForeground(colorRegistry.getColor(LINE_COLOR));
-		gc.setLineStyle(SWT.LINE_DASH);
-		gc.drawLine(drawArea.x + World.CELL_PIXEL_SIZE, drawArea.y + World.CELL_PIXEL_SIZE,
-				!northSouth ? drawArea.x + drawArea.width - World.CELL_PIXEL_SIZE - 1 : drawArea.x + World.CELL_PIXEL_SIZE,
-				northSouth ? drawArea.y + drawArea.height - World.CELL_PIXEL_SIZE - 1 : drawArea.y + World.CELL_PIXEL_SIZE);
-		return false;
+		if (pass == 0) {
+			gc.setBackground(colorRegistry.getColor(Lane.COLOR));
+			gc.fillRectangle(drawArea.x, drawArea.y, drawArea.width, drawArea.height);
+			return true;
+		} else {
+			gc.setForeground(colorRegistry.getColor(LINE_COLOR));
+			for (int i = 1; i < (lanesPerSide * 2); i++) {
+				gc.setLineStyle((i == lanesPerSide) ? SWT.LINE_DASH : SWT.LINE_DOT);
+				if (northSouth) {
+					gc.drawLine(drawArea.x + World.CELL_PIXEL_SIZE * i + World.CELL_SPACING * (i - 1),
+							drawArea.y + World.CELL_PIXEL_SIZE,
+							drawArea.x + World.CELL_PIXEL_SIZE * i + World.CELL_SPACING * (i - 1),
+							drawArea.y + drawArea.height - World.CELL_PIXEL_SIZE - 1);
+				} else {
+					gc.drawLine(drawArea.x + World.CELL_PIXEL_SIZE,
+							drawArea.y + World.CELL_PIXEL_SIZE * i + World.CELL_SPACING * (i - 1),
+							drawArea.x + drawArea.width - World.CELL_PIXEL_SIZE - 1,
+							drawArea.y + World.CELL_PIXEL_SIZE * i + World.CELL_SPACING * (i - 1));
+				}
+			}
+			return false;
+		}
 	}
 
 	@Override
@@ -91,25 +126,67 @@ public class Road implements IDrawable {
 
 		switch (headedTo) {
 			case NORTH:
-				if (northLane != null) {
-					return northLane.contains(location);
+				if (northLanes != null) {
+					return contains(northLanes, location);
 				}
 				break;
 			case WEST:
-				if (westLane != null) {
-					return westLane.contains(location);
+				if (westLanes != null) {
+					return contains(westLanes, location);
 				}
 				break;
 			case SOUTH:
-				if (southLane != null) {
-					return southLane.contains(location);
+				if (southLanes != null) {
+					return contains(southLanes, location);
 				}
 				break;
 			case EAST:
-				if (eastLane != null) {
-					return eastLane.contains(location);
+				if (eastLanes != null) {
+					return contains(eastLanes, location);
 				}
 				break;
+		}
+		return false;
+	}
+
+	boolean isRightMostSide(Point location, Direction headedTo) {
+		if ((headedTo == null) || !contains(location)) {
+			throw new IllegalArgumentException();
+		}
+
+		int outermostIdx = lanesPerSide - 1;
+		switch (headedTo) {
+			case NORTH:
+				if ((northLanes != null) && northLanes[outermostIdx].contains(location)) {
+					return true;
+				}
+				break;
+			case WEST:
+				if ((westLanes != null) && westLanes[outermostIdx].contains(location)) {
+					return true;
+				}
+				break;
+			case SOUTH:
+				if ((southLanes != null) && southLanes[outermostIdx].contains(location)) {
+					return true;
+				}
+				break;
+			case EAST:
+				if ((eastLanes != null) && eastLanes[outermostIdx].contains(location)) {
+					return true;
+				}
+				break;
+		}
+		return false;
+	}
+
+	private boolean contains(Lane[] lanes, Point location) {
+		if (lanes != null) {
+			for (int i = 0; i < lanes.length; i++) {
+				if (lanes[i].contains(location)) {
+					return true;
+				}
+			}
 		}
 		return false;
 	}

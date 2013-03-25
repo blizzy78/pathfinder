@@ -98,7 +98,7 @@ class TrafficDensity {
 		Set<Area> segments = new HashSet<>();
 
 		// north-south
-		if ((area.width == 2) && (area.height > 2)) {
+		if (area.height > area.width) {
 			int endY = area.y + area.height;
 			int startY = area.y - 1;
 			for (int y = startY + 1; y < endY; y++) {
@@ -116,7 +116,7 @@ class TrafficDensity {
 		}
 
 		// west-east
-		if ((area.width > 2) && (area.height == 2)) {
+		if (area.width > area.height) {
 			int endX = area.x + area.width;
 			int startX = area.x - 1;
 			for (int x = startX + 1; x < endX; x++) {

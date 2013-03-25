@@ -122,35 +122,44 @@ public class PathFinder {
 	}
 
 	private World createWorld(Composite parent) {
-		World world = new World(parent, 92, 92);
+		World world = new World(parent, 96, 96);
 
 		// roads
-		for (int i = 0; i < 10; i++) {
-			// north-south
-			new Road(world, new Point(i * 10, 0), 92, Direction.SOUTH);
-			// west-east
-			new Road(world, new Point(0, i * 10), 92, Direction.EAST);
+		for (int i = 0; i < 11; i++) {
+			if ((i % 2) == 0) {
+				// north-south
+				new Road(world, new Point(i * 9 + ((i > 4) ? 4 : 0), 0), (i == 4) ? 6 : 2, 96, Direction.SOUTH);
+				// west-east
+				new Road(world, new Point(0, i * 9 + ((i > 4) ? 4 : 0)), (i == 4) ? 6 : 2, 96, Direction.EAST);
+			}
 		}
 
 		// buildings
-		for (int x = 0; x < 18; x++) {
-			for (int y = 0; y < 18; y++) {
-				new Building(world, new Area(world, new Rectangle(x * 4 + ((x / 2) + 1) * 2, y * 4 + ((y / 2) + 1) * 2, 4, 4)));
+		for (int x = 0; x < 20; x++) {
+			for (int y = 0; y < 20; y++) {
+				new Building(world, new Area(world, new Rectangle(
+						x * 4 + ((x / 4) + 1) * 2 + ((x > 7) ? 4 : 0),
+						y * 4 + ((y / 4) + 1) * 2 + ((y > 7) ? 4 : 0),
+						4, 4)));
 			}
 		}
 
 		// road blocks
-		new RoadBlock(world, new Point(89, 71));
+		new RoadBlock(world, new Point(93, 77));
 
 		// vehicles
 		for (int i = 1; i <= 500; i++) {
-			new Vehicle(world, new Point(31, 41));
+			new Vehicle(world, new Point(31, 40));
 		}
 
 		// traffic lights
-		for (int x = 0; x < 10; x++) {
-			for (int y = 0; y < 10; y++) {
-				new TrafficLight(world, new Point(x * 10, y * 10));
+		for (int x = 0; x < 6; x++) {
+			for (int y = 0; y < 6; y++) {
+				new TrafficLight(world, new Point(
+						x * 18 + ((x > 2) ? 4 : 0),
+						y * 18 + ((y > 2) ? 4 : 0)),
+						(x == 2) ? 6 : 2,
+						(y == 2) ? 6 : 2);
 			}
 		}
 

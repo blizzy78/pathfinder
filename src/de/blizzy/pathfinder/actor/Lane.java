@@ -31,7 +31,6 @@ import de.blizzy.pathfinder.Direction;
 class Lane implements IDrawable {
 	static final RGB COLOR = new RGB(60, 60, 60);
 
-	private ColorRegistry colorRegistry;
 	private Area area;
 
 	Lane(World world, Point location, int length, Direction direction) {
@@ -60,7 +59,6 @@ class Lane implements IDrawable {
 			throw new IllegalArgumentException("world does not contain lane ending point"); //$NON-NLS-1$
 		}
 
-		colorRegistry = world.getColorRegistry();
 		int width = (direction == Direction.NORTH) || (direction == Direction.SOUTH) ? 1 : length;
 		int height = (direction == Direction.WEST) || (direction == Direction.EAST) ? 1 : length;
 		area = new Area(world, new Rectangle(Math.min(location.x, endLocation.x), Math.min(location.y, endLocation.y),
@@ -76,8 +74,7 @@ class Lane implements IDrawable {
 
 	@Override
 	public boolean paint(GC gc, int pass) {
-		gc.setBackground(colorRegistry.getColor(COLOR));
-		gc.fillRectangle(area.getDrawArea());
+		// done by Road
 		return false;
 	}
 

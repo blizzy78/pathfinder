@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.swt.graphics.GC;
@@ -105,9 +106,19 @@ public class Vehicle implements IActor {
 
 	private void drive() {
 		if (Math.random() < PARK_CHANCE) {
-			mode = Mode.PARK;
-			parkedTime = System.currentTimeMillis();
-			mustRedraw.set(true);
+			boolean rightMostSide = true;
+			Set<Road> roads = world.getRoadsAt(location);
+			for (Road road : roads) {
+				if (!road.isRightMostSide(location, headedTo)) {
+					rightMostSide = false;
+					break;
+				}
+			}
+			if (rightMostSide) {
+				mode = Mode.PARK;
+				parkedTime = System.currentTimeMillis();
+				mustRedraw.set(true);
+			}
 			return;
 		}
 
