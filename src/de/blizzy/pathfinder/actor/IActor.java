@@ -21,13 +21,7 @@ SOFTWARE.
 */
 package de.blizzy.pathfinder.actor;
 
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Point;
-
-interface IActor {
-	boolean mustRedraw();
-	boolean paint(GC gc, int pass);
+interface IActor extends IDrawable {
 	void animate();
 	boolean canBlockRoad();
-	boolean contains(Point location);
 }

@@ -27,21 +27,34 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 
-public class Road implements IActor {
-	private static final int WIDTH = 2;
-	private static final RGB COLOR = new RGB(60, 60, 60);
+import de.blizzy.pathfinder.Direction;
+
+public class Road implements IDrawable {
 	private static final RGB LINE_COLOR = new RGB(150, 150, 150);
 
-	private Area area;
 	private ColorRegistry colorRegistry;
+	private boolean northSouth;
+	private Area area;
+	private Lane northLane;
+	private Lane westLane;
+	private Lane southLane;
+	private Lane eastLane;
 
-	public Road(World world, Area area) {
-		if ((area.getArea().width != WIDTH) && (area.getArea().height != WIDTH)) {
-			throw new IllegalArgumentException("road width must be exactly " + WIDTH); //$NON-NLS-1$
-		}
-
-		this.area = area;
+	public Road(World world, Point location, int length, Direction direction) {
 		colorRegistry = world.getColorRegistry();
+		northSouth = (direction == Direction.NORTH) || (direction == Direction.SOUTH);
+
+		area = northSouth ?
+				new Area(world, new Rectangle(location.x, location.y, 2, length)) :
+				new Area(world, new Rectangle(location.x, location.y, length, 2));
+
+		if (northSouth) {
+			southLane = new Lane(world, new Point(location.x, location.y), length, Direction.SOUTH);
+			northLane = new Lane(world, new Point(location.x + 1, location.y + length - 1), length, Direction.NORTH);
+		} else {
+			westLane = new Lane(world, new Point(location.x + length - 1, location.y), length, Direction.WEST);
+			eastLane = new Lane(world, new Point(location.x, location.y + 1), length, Direction.EAST);
+		}
 
 		world.add(this);
 	}
@@ -55,20 +68,15 @@ public class Road implements IActor {
 	@Override
 	public boolean paint(GC gc, int pass) {
 		Rectangle drawArea = area.getDrawArea();
-		boolean horizontal = area.getArea().height == 2;
-
-		if (pass == 0) {
-			gc.setBackground(colorRegistry.getColor(COLOR));
-			gc.fillRectangle(drawArea);
-			return true;
-		} else {
-			gc.setForeground(colorRegistry.getColor(LINE_COLOR));
-			gc.setLineStyle(SWT.LINE_DASH);
-			gc.drawLine(drawArea.x + World.CELL_PIXEL_SIZE, drawArea.y + World.CELL_PIXEL_SIZE,
-					horizontal ? drawArea.x + drawArea.width - World.CELL_PIXEL_SIZE - 1 : drawArea.x + World.CELL_PIXEL_SIZE,
-					!horizontal ? drawArea.y + drawArea.height - World.CELL_PIXEL_SIZE - 1 : drawArea.y + World.CELL_PIXEL_SIZE);
-			return false;
-		}
+		gc.setBackground(colorRegistry.getColor(Lane.COLOR));
+		gc.fillRectangle(drawArea.x + World.CELL_PIXEL_SIZE, drawArea.y + World.CELL_PIXEL_SIZE,
+				northSouth ? 1 : drawArea.width - World.CELL_PIXEL_SIZE, !northSouth ? 1 : drawArea.height - World.CELL_PIXEL_SIZE);
+		gc.setForeground(colorRegistry.getColor(LINE_COLOR));
+		gc.setLineStyle(SWT.LINE_DASH);
+		gc.drawLine(drawArea.x + World.CELL_PIXEL_SIZE, drawArea.y + World.CELL_PIXEL_SIZE,
+				!northSouth ? drawArea.x + drawArea.width - World.CELL_PIXEL_SIZE - 1 : drawArea.x + World.CELL_PIXEL_SIZE,
+				northSouth ? drawArea.y + drawArea.height - World.CELL_PIXEL_SIZE - 1 : drawArea.y + World.CELL_PIXEL_SIZE);
+		return false;
 	}
 
 	@Override
@@ -76,33 +84,34 @@ public class Road implements IActor {
 		return area.contains(location);
 	}
 
-	@Override
-	public boolean canBlockRoad() {
-		return false;
-	}
-
-	@Override
-	public void animate() {
-		// roads do not move
-	}
-
 	boolean isRightSide(Point location, Direction headedTo) {
-		if (!contains(location)) {
+		if ((headedTo == null) || !contains(location)) {
 			throw new IllegalArgumentException();
 		}
 
-		Rectangle area = this.area.getArea();
 		switch (headedTo) {
 			case NORTH:
-				return location.x == area.x + 1;
+				if (northLane != null) {
+					return northLane.contains(location);
+				}
+				break;
 			case WEST:
-				return location.y == area.y;
+				if (westLane != null) {
+					return westLane.contains(location);
+				}
+				break;
 			case SOUTH:
-				return location.x == area.x;
+				if (southLane != null) {
+					return southLane.contains(location);
+				}
+				break;
 			case EAST:
-				return location.y == area.y + 1;
+				if (eastLane != null) {
+					return eastLane.contains(location);
+				}
+				break;
 		}
-		throw new IllegalArgumentException();
+		return false;
 	}
 
 	Area getArea() {

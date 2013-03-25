@@ -28,6 +28,8 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 
+import de.blizzy.pathfinder.Direction;
+
 public class TrafficLight implements IActor {
 	private static final RGB RED_COLOR = new RGB(255, 0, 0);
 	private static final RGB GREEN_COLOR = new RGB(0, 255, 0);

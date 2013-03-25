@@ -126,10 +126,10 @@ public class PathFinder {
 
 		// roads
 		for (int i = 0; i < 10; i++) {
-			// west-east
-			new Road(world, new Area(world, new Rectangle(0, i * 10, 92, 2)));
 			// north-south
-			new Road(world, new Area(world, new Rectangle(i * 10, 0, 2, 92)));
+			new Road(world, new Point(i * 10, 0), 92, Direction.SOUTH);
+			// west-east
+			new Road(world, new Point(0, i * 10), 92, Direction.EAST);
 		}
 
 		// buildings
@@ -140,7 +140,6 @@ public class PathFinder {
 		}
 
 		// road blocks
-//		new RoadBlock(world, new Point(89, 70));
 		new RoadBlock(world, new Point(89, 71));
 
 		// vehicles

@@ -32,6 +32,8 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 
+import de.blizzy.pathfinder.Direction;
+
 public class Vehicle implements IActor {
 	private static enum Mode {
 		DRIVE, PARK;

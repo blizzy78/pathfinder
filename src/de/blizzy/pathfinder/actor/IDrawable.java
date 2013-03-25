@@ -21,20 +21,11 @@ SOFTWARE.
 */
 package de.blizzy.pathfinder.actor;
 
-enum Direction {
-	NORTH, WEST, SOUTH, EAST;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 
-	Direction opposite() {
-		switch (this) {
-			case NORTH:
-				return SOUTH;
-			case WEST:
-				return EAST;
-			case SOUTH:
-				return NORTH;
-			case EAST:
-				return WEST;
-		}
-		throw new RuntimeException();
-	}
+public interface IDrawable {
+	boolean mustRedraw();
+	boolean paint(GC gc, int pass);
+	boolean contains(Point location);
 }

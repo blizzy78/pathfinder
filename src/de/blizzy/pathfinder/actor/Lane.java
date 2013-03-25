@@ -24,23 +24,53 @@ package de.blizzy.pathfinder.actor;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 
-public class Building implements IDrawable {
-	private static final RGB COLOR = new RGB(0, 175, 0);
+import de.blizzy.pathfinder.Direction;
 
-	private Area area;
+class Lane implements IDrawable {
+	static final RGB COLOR = new RGB(60, 60, 60);
+
 	private ColorRegistry colorRegistry;
+	private Area area;
 
-	public Building(World world, Area area) {
-		this.area = area;
+	Lane(World world, Point location, int length, Direction direction) {
+		if (!world.contains(location)) {
+			throw new IllegalArgumentException("world does not contain lane starting point"); //$NON-NLS-1$
+		}
+
+		Point endLocation;
+		switch (direction) {
+			case NORTH:
+				endLocation = new Point(location.x, location.y - length + 1);
+				break;
+			case WEST:
+				endLocation = new Point(location.x - length + 1, location.y);
+				break;
+			case EAST:
+				endLocation = new Point(location.x + length - 1, location.y);
+				break;
+			case SOUTH:
+				endLocation = new Point(location.x, location.y + length - 1);
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+		if (!world.contains(endLocation)) {
+			throw new IllegalArgumentException("world does not contain lane ending point"); //$NON-NLS-1$
+		}
+
 		colorRegistry = world.getColorRegistry();
+		int width = (direction == Direction.NORTH) || (direction == Direction.SOUTH) ? 1 : length;
+		int height = (direction == Direction.WEST) || (direction == Direction.EAST) ? 1 : length;
+		area = new Area(world, new Rectangle(Math.min(location.x, endLocation.x), Math.min(location.y, endLocation.y),
+				width, height));
 
 		world.add(this);
 	}
 
 	@Override
 	public boolean mustRedraw() {
-		// buildings do never change
 		return false;
 	}
 

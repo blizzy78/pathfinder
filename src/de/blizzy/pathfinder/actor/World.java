@@ -56,7 +56,9 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-public class World implements IActor {
+import de.blizzy.pathfinder.Direction;
+
+public class World implements IDrawable {
 	static final int ANIMATION_FRAMES_PER_SECOND = 100;
 	static final int REDRAW_FRAMES_PER_SECOND = 60;
 	static final int CELL_PIXEL_SIZE = 7;
@@ -69,6 +71,7 @@ public class World implements IActor {
 	private TrafficDensity trafficDensity;
 	private ColorRegistry colorRegistry;
 	private Canvas canvas;
+	private IDrawable[] drawables = new IDrawable[0];
 	private IActor[] actors = new IActor[0];
 	private Road[] roads = new Road[0];
 	private Vehicle[] vehicles = new Vehicle[0];
@@ -183,9 +186,9 @@ public class World implements IActor {
 	private boolean paintObjects(int pass, boolean force) {
 		boolean needMorePasses = false;
 		GC gc = doubleBuffer.getGC();
-		for (IActor actor : actors) {
-			if (force || actor.mustRedraw()) {
-				if (actor.paint(gc, pass)) {
+		for (IDrawable drawable : drawables) {
+			if (force || drawable.mustRedraw()) {
+				if (drawable.paint(gc, pass)) {
 					needMorePasses = true;
 				}
 				doubleBuffer.setDirty(true);
@@ -207,21 +210,28 @@ public class World implements IActor {
 		return false;
 	}
 
-	void add(IActor actor) {
-		List<IActor> newActors = new ArrayList<>(Arrays.asList(actors));
-		newActors.add(actor);
-		Collections.sort(newActors, ActorLayerComparator.INSTANCE);
-		actors = newActors.toArray(new IActor[0]);
+	void add(IDrawable drawable) {
+		List<IDrawable> newDrawables = new ArrayList<>(Arrays.asList(drawables));
+		newDrawables.add(drawable);
+		Collections.sort(newDrawables, DrawableLayerComparator.INSTANCE);
+		drawables = newDrawables.toArray(new IDrawable[0]);
 
-		if (actor instanceof Road) {
+		if (drawable instanceof IActor) {
+			List<IActor> newActors = new ArrayList<>(Arrays.asList(actors));
+			newActors.add((IActor) drawable);
+			Collections.sort(newActors, DrawableLayerComparator.INSTANCE);
+			actors = newActors.toArray(new IActor[0]);
+		}
+
+		if (drawable instanceof Road) {
 			List<Road> newRoads = new ArrayList<>(Arrays.asList(roads));
-			newRoads.add((Road) actor);
+			newRoads.add((Road) drawable);
 			roads = newRoads.toArray(new Road[0]);
 		}
 
-		if (actor instanceof Vehicle) {
+		if (drawable instanceof Vehicle) {
 			List<Vehicle> newVehicles = new ArrayList<>(Arrays.asList(vehicles));
-			newVehicles.add((Vehicle) actor);
+			newVehicles.add((Vehicle) drawable);
 			vehicles = newVehicles.toArray(new Vehicle[0]);
 		}
 	}
@@ -296,11 +306,6 @@ public class World implements IActor {
 		}
 	}
 
-	@Override
-	public void animate() {
-		// world does not move
-	}
-
 	private void animateWorld() {
 		List<ListenableFuture<?>> futures = new ArrayList<>(Math.max(actors.length, 1));
 		for (final IActor actor : actors) {
@@ -360,11 +365,6 @@ public class World implements IActor {
 				return true;
 			}
 		}
-		return false;
-	}
-
-	@Override
-	public boolean canBlockRoad() {
 		return false;
 	}
 
