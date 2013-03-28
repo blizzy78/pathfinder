@@ -109,7 +109,7 @@ public class Vehicle implements IActor {
 			boolean rightMostSide = true;
 			Set<Road> roads = world.getRoadsAt(location);
 			for (Road road : roads) {
-				if (!road.isRightMostSide(location, headedTo)) {
+				if (!road.isOutermostSide(location, headedTo)) {
 					rightMostSide = false;
 					break;
 				}

@@ -65,9 +65,6 @@ public class Road implements IDrawable {
 			eastLanes = new Lane[lanesPerSide];
 		}
 
-		//  x   x+1  x+2  x+3  x+4  x+5
-		//  S   S    S    N    N    N
-
 		for (int i = 0; i < lanesPerSide; i++) {
 			if (northSouth) {
 				northLanes[i] = new Lane(world, new Point(location.x + lanesPerSide + i, location.y + length - 1), length, Direction.NORTH);
@@ -149,7 +146,7 @@ public class Road implements IDrawable {
 		return false;
 	}
 
-	boolean isRightMostSide(Point location, Direction headedTo) {
+	boolean isOutermostSide(Point location, Direction headedTo) {
 		if ((headedTo == null) || !contains(location)) {
 			throw new IllegalArgumentException();
 		}
@@ -182,8 +179,8 @@ public class Road implements IDrawable {
 
 	private boolean contains(Lane[] lanes, Point location) {
 		if (lanes != null) {
-			for (int i = 0; i < lanes.length; i++) {
-				if (lanes[i].contains(location)) {
+			for (Lane lane : lanes) {
+				if (lane.contains(location)) {
 					return true;
 				}
 			}
