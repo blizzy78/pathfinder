@@ -35,6 +35,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -82,7 +83,7 @@ public class World implements IDrawable {
 	private Map<Point, Boolean> isRoadAtCache = new HashMap<>();
 	private ListeningExecutorService taskExecutor = MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(
 			8, new ThreadFactoryBuilder().setNameFormat("Task Executor (%d)").build())); //$NON-NLS-1$
-	private boolean paused;
+	private AtomicBoolean paused = new AtomicBoolean();
 
 	public World(Composite parent, int width, int height) {
 		this.width = width;
@@ -111,7 +112,7 @@ public class World implements IDrawable {
 		TimerTask animationTask = new TimerTask() {
 			@Override
 			public void run() {
-				if (!paused) {
+				if (!paused.get()) {
 					animateWorld();
 				}
 			}
@@ -121,7 +122,7 @@ public class World implements IDrawable {
 		TimerTask redrawTask = new TimerTask() {
 			@Override
 			public void run() {
-				if (!paused) {
+				if (!paused.get()) {
 					redrawWorld();
 				}
 			}
@@ -386,7 +387,7 @@ public class World implements IDrawable {
 	}
 
 	public void setPaused(boolean paused) {
-		this.paused = paused;
+		this.paused.set(paused);
 	}
 
 	TrafficDensity getTrafficDensity() {
