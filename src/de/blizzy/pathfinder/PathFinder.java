@@ -135,12 +135,12 @@ public class PathFinder {
 		}
 
 		// buildings
-		for (int x = 0; x < 20; x++) {
-			for (int y = 0; y < 20; y++) {
+		for (int x = 0; x < 10; x++) {
+			for (int y = 0; y < 10; y++) {
 				new Building(world, new Area(world, new Rectangle(
-						x * 4 + ((x / 4) + 1) * 2 + ((x > 7) ? 4 : 0),
-						y * 4 + ((y / 4) + 1) * 2 + ((y > 7) ? 4 : 0),
-						4, 4)));
+						x * 8 + ((x / 2) + 1) * 2 + ((x > 3) ? 4 : 0),
+						y * 8 + ((y / 2) + 1) * 2 + ((y > 3) ? 4 : 0),
+						8, 8)));
 			}
 		}
 
