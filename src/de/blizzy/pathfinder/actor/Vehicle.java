@@ -45,7 +45,7 @@ public class Vehicle implements IActor {
 	private static final int FRAMES_PER_STEP = 1;
 	private static final double CHANGE_DIRECTION_CHANCE = 0.05d;
 	private static final double PARK_CHANCE = 0.0005d;
-	private static final long PARK_DURATION = 5 * 1000;
+	private static final long PARK_DURATION = 8 * 1000;
 
 	private World world;
 	private Point location;
