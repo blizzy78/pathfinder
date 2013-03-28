@@ -122,65 +122,67 @@ public class Vehicle implements IActor {
 			return;
 		}
 
+		Map<Direction, Point> blockedDirections = getPossibleDirections(location, true);
+		boolean couldGoInSameDirection = blockedDirections.containsKey(headedTo);
 		Map<Direction, Point> possibleDirections = getPossibleDirections(location, false);
-		if (!possibleDirections.isEmpty()) {
-			Map<Direction, Point> blockedDirections = getPossibleDirections(location, true);
-			boolean canGoInSameDirection = possibleDirections.containsKey(headedTo);
-			boolean changeDirection = Math.random() < CHANGE_DIRECTION_CHANCE;
-			boolean couldGoInSameDirection = blockedDirections.containsKey(headedTo);
-			Point newLocation = null;
-			if (!canGoInSameDirection && couldGoInSameDirection && !changeDirection &&
-				world.isParkingVehicleAt(blockedDirections.get(headedTo))) {
+		boolean canGoInSameDirection = possibleDirections.containsKey(headedTo);
+		boolean changeDirection = Math.random() < CHANGE_DIRECTION_CHANCE;
+		Point newLocation = null;
 
-				System.out.println("parking");
+		// try to drive around a parking vehicle
+		if (couldGoInSameDirection && !canGoInSameDirection && !changeDirection &&
+			world.isParkingVehicleAt(blockedDirections.get(headedTo))) {
 
-				Direction comingFrom;
-				switch (headedTo) {
-					case NORTH:
-						newLocation = new Point(location.x - 1, location.y);
-						comingFrom = Direction.EAST;
-						break;
-					case WEST:
-						newLocation = new Point(location.x, location.y + 1);
-						comingFrom = Direction.NORTH;
-						break;
-					case SOUTH:
-						newLocation = new Point(location.x + 1, location.y);
-						comingFrom = Direction.WEST;
-						break;
-					case EAST:
-						newLocation = new Point(location.x, location.y - 1);
-						comingFrom = Direction.SOUTH;
-						break;
-					default:
-						throw new IllegalStateException();
-				}
-				if (!isRoad(newLocation) ||
-					!isRightSideOfRoad(newLocation, headedTo) ||
-					world.isRoadBlockedAt(newLocation, comingFrom, location)) {
-
-					newLocation = null;
-				}
+			Direction comingFrom;
+			switch (headedTo) {
+				case NORTH:
+					newLocation = new Point(location.x - 1, location.y);
+					comingFrom = Direction.EAST;
+					break;
+				case WEST:
+					newLocation = new Point(location.x, location.y + 1);
+					comingFrom = Direction.NORTH;
+					break;
+				case SOUTH:
+					newLocation = new Point(location.x + 1, location.y);
+					comingFrom = Direction.WEST;
+					break;
+				case EAST:
+					newLocation = new Point(location.x, location.y - 1);
+					comingFrom = Direction.SOUTH;
+					break;
+				default:
+					throw new IllegalStateException();
 			}
-			if ((newLocation == null) &&
-				(!canGoInSameDirection || changeDirection)) {
+			if (!isRoad(newLocation) ||
+				!isRightSideOfRoad(newLocation, headedTo) ||
+				world.isRoadBlockedAt(newLocation, comingFrom, location)) {
 
-				List<Direction> directions = new ArrayList<>(possibleDirections.keySet());
-				if (changeDirection && canGoInSameDirection && (directions.size() > 1)) {
-					directions.remove(headedTo);
-				}
-				Collections.shuffle(directions);
-				headedTo = directions.get(0);
-				newLocation = possibleDirections.get(headedTo);
+				newLocation = null;
 			}
-			if (newLocation == null) {
-				newLocation = possibleDirections.get(headedTo);
-			}
+		}
 
-			if (newLocation != null) {
-				location = newLocation;
-				mustRedraw.set(true);
+		// change direction if necessary or per random chance
+		if ((newLocation == null) && !possibleDirections.isEmpty() &&
+			(!canGoInSameDirection || changeDirection)) {
+
+			List<Direction> directions = new ArrayList<>(possibleDirections.keySet());
+			if (changeDirection && canGoInSameDirection && (directions.size() > 1)) {
+				directions.remove(headedTo);
 			}
+			Collections.shuffle(directions);
+			headedTo = directions.get(0);
+			newLocation = possibleDirections.get(headedTo);
+		}
+
+		// default behavior: move into desired direction
+		if (newLocation == null) {
+			newLocation = possibleDirections.get(headedTo);
+		}
+
+		if (newLocation != null) {
+			location = newLocation;
+			mustRedraw.set(true);
 		}
 	}
 
