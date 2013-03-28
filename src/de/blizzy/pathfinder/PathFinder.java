@@ -147,8 +147,8 @@ public class PathFinder {
 		// road blocks
 		new RoadBlock(world, new Point(93, 77));
 
-//		// vehicles
-		for (int i = 1; i <= 500; i++) {
+		// vehicles
+		for (int i = 1; i <= 750; i++) {
 			new Vehicle(world, new Point(36, 40));
 		}
 
