@@ -122,22 +122,65 @@ public class Vehicle implements IActor {
 			return;
 		}
 
-		Map<Direction, Point> possibleDirections = getPossibleDirections();
+		Map<Direction, Point> possibleDirections = getPossibleDirections(location, false);
 		if (!possibleDirections.isEmpty()) {
+			Map<Direction, Point> blockedDirections = getPossibleDirections(location, true);
 			boolean canGoInSameDirection = possibleDirections.containsKey(headedTo);
 			boolean changeDirection = Math.random() < CHANGE_DIRECTION_CHANCE;
-			if (!canGoInSameDirection || changeDirection) {
+			boolean couldGoInSameDirection = blockedDirections.containsKey(headedTo);
+			Point newLocation = null;
+			if (!canGoInSameDirection && couldGoInSameDirection && !changeDirection &&
+				world.isParkingVehicleAt(blockedDirections.get(headedTo))) {
+
+				System.out.println("parking");
+
+				Direction comingFrom;
+				switch (headedTo) {
+					case NORTH:
+						newLocation = new Point(location.x - 1, location.y);
+						comingFrom = Direction.EAST;
+						break;
+					case WEST:
+						newLocation = new Point(location.x, location.y + 1);
+						comingFrom = Direction.NORTH;
+						break;
+					case SOUTH:
+						newLocation = new Point(location.x + 1, location.y);
+						comingFrom = Direction.WEST;
+						break;
+					case EAST:
+						newLocation = new Point(location.x, location.y - 1);
+						comingFrom = Direction.SOUTH;
+						break;
+					default:
+						throw new IllegalStateException();
+				}
+				if (!isRoad(newLocation) ||
+					!isRightSideOfRoad(newLocation, headedTo) ||
+					world.isRoadBlockedAt(newLocation, comingFrom, location)) {
+
+					newLocation = null;
+				}
+			}
+			if ((newLocation == null) &&
+				(!canGoInSameDirection || changeDirection)) {
+
 				List<Direction> directions = new ArrayList<>(possibleDirections.keySet());
 				if (changeDirection && canGoInSameDirection && (directions.size() > 1)) {
 					directions.remove(headedTo);
 				}
 				Collections.shuffle(directions);
 				headedTo = directions.get(0);
+				newLocation = possibleDirections.get(headedTo);
+			}
+			if (newLocation == null) {
+				newLocation = possibleDirections.get(headedTo);
 			}
 
-			Point newLocation = possibleDirections.get(headedTo);
-			location = newLocation;
-			mustRedraw.set(true);
+			if (newLocation != null) {
+				location = newLocation;
+				mustRedraw.set(true);
+			}
 		}
 	}
 
@@ -148,14 +191,14 @@ public class Vehicle implements IActor {
 		}
 	}
 
-	private Map<Direction, Point> getPossibleDirections() {
+	private Map<Direction, Point> getPossibleDirections(Point location, boolean blocked) {
 		Map<Direction, Point> directions = new HashMap<>(4);
 		Point newLocation;
 		if (headedTo != Direction.SOUTH) {
 			newLocation = new Point(location.x, location.y - 1);
 			if (isRoad(newLocation) &&
 				isRightSideOfRoad(newLocation, Direction.NORTH) &&
-				!world.isRoadBlockedAt(newLocation, Direction.SOUTH, location)) {
+				(world.isRoadBlockedAt(newLocation, Direction.SOUTH, location) == blocked)) {
 
 				directions.put(Direction.NORTH, newLocation);
 			}
@@ -164,7 +207,7 @@ public class Vehicle implements IActor {
 			newLocation = new Point(location.x - 1, location.y);
 			if (isRoad(newLocation) &&
 				isRightSideOfRoad(newLocation, Direction.WEST) &&
-				!world.isRoadBlockedAt(newLocation, Direction.EAST, location)) {
+				(world.isRoadBlockedAt(newLocation, Direction.EAST, location) == blocked)) {
 
 				directions.put(Direction.WEST, newLocation);
 			}
@@ -173,7 +216,7 @@ public class Vehicle implements IActor {
 			newLocation = new Point(location.x, location.y + 1);
 			if (isRoad(newLocation) &&
 				isRightSideOfRoad(newLocation, Direction.SOUTH) &&
-				!world.isRoadBlockedAt(newLocation, Direction.NORTH, location)) {
+				(world.isRoadBlockedAt(newLocation, Direction.NORTH, location) == blocked)) {
 
 				directions.put(Direction.SOUTH, newLocation);
 			}
@@ -182,7 +225,7 @@ public class Vehicle implements IActor {
 			newLocation = new Point(location.x + 1, location.y);
 			if (isRoad(newLocation) &&
 				isRightSideOfRoad(newLocation, Direction.EAST) &&
-				!world.isRoadBlockedAt(newLocation, Direction.WEST, location)) {
+				(world.isRoadBlockedAt(newLocation, Direction.WEST, location) == blocked)) {
 
 				directions.put(Direction.EAST, newLocation);
 			}
@@ -218,5 +261,9 @@ public class Vehicle implements IActor {
 
 	Point getLocation() {
 		return location;
+	}
+
+	public boolean isParking() {
+		return mode == Mode.PARK;
 	}
 }

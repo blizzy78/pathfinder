@@ -368,6 +368,15 @@ public class World implements IDrawable {
 		return false;
 	}
 
+	boolean isParkingVehicleAt(Point location) {
+		for (Vehicle vehicle : vehicles) {
+			if (vehicle.contains(location) && vehicle.isParking()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public void forceCompleteRedraw() {
 		initialPaint = false;
 	}
