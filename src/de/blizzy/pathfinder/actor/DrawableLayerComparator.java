@@ -39,6 +39,7 @@ class DrawableLayerComparator implements Comparator<IDrawable> {
 		classes.add(Vehicle.class);
 		classes.add(TrafficLight.class);
 		classes.add(TrafficDensityOverlay.class);
+		classes.add(FollowVehicleOverlay.class);
 	}
 
 	private DrawableLayerComparator() {}

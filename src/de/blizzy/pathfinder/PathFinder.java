@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import de.blizzy.pathfinder.actor.Area;
 import de.blizzy.pathfinder.actor.Building;
+import de.blizzy.pathfinder.actor.FollowVehicleOverlay;
 import de.blizzy.pathfinder.actor.Road;
 import de.blizzy.pathfinder.actor.RoadBlock;
 import de.blizzy.pathfinder.actor.TrafficDensityOverlay;
@@ -46,15 +47,12 @@ import de.blizzy.pathfinder.actor.TrafficLight;
 import de.blizzy.pathfinder.actor.Vehicle;
 import de.blizzy.pathfinder.actor.World;
 
-public class PathFinder {
+class PathFinder {
 	private boolean running = true;
+	private Display display;
 
-	public static void main(String... args) {
-		new PathFinder().run();
-	}
-
-	private void run() {
-		final Display display = Display.getDefault();
+	void run() {
+		display = Display.getDefault();
 
 		Shell shell = new Shell(display);
 		shell.setText("PathFinder"); //$NON-NLS-1$
@@ -148,8 +146,12 @@ public class PathFinder {
 		new RoadBlock(world, new Point(93, 77));
 
 		// vehicles
+		Vehicle firstVehicle = null;
 		for (int i = 1; i <= 750; i++) {
-			new Vehicle(world, new Point(36, 40));
+			Vehicle vehicle = new Vehicle(world, new Point(36, 40));
+			if (firstVehicle == null) {
+				firstVehicle = vehicle;
+			}
 		}
 
 		// traffic lights
@@ -165,6 +167,14 @@ public class PathFinder {
 
 		new TrafficDensityOverlay(world);
 
+		FollowVehicleOverlay followVehicleOverlay = new FollowVehicleOverlay(world);
+		followVehicleOverlay.setVehicle(firstVehicle);
+
 		return world;
+	}
+
+	void stop() {
+		running = false;
+		display.wake();
 	}
 }

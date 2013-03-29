@@ -19,14 +19,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-package de.blizzy.pathfinder.actor;
+package de.blizzy.pathfinder;
 
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Point;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 
-public interface IDrawable {
-	boolean mustRedraw();
-	boolean paint(GC gc, int pass);
-	boolean contains(Point location);
-	void dispose();
+public class PathFinderPlugin extends AbstractUIPlugin {
+	private static final String ID = "de.blizzy.pathfinder"; //$NON-NLS-1$
+
+	public static ImageDescriptor getImageDescriptor(String path) {
+		return imageDescriptorFromPlugin(ID, path);
+	}
 }

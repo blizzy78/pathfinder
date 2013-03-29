@@ -92,7 +92,7 @@ public class World implements IDrawable {
 		canvas.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e) {
-				dispose();
+				handleDispose();
 			}
 		});
 
@@ -127,8 +127,16 @@ public class World implements IDrawable {
 		return height * CELL_PIXEL_SIZE + (height - 1) * CELL_SPACING;
 	}
 
-	private void dispose() {
+	@Override
+	public void dispose() {
+		canvas.dispose();
+	}
+
+	private void handleDispose() {
 		timer.cancel();
+		for (IDrawable drawable : drawables) {
+			drawable.dispose();
+		}
 		doubleBuffer.dispose();
 		colorRegistry.dispose();
 	}
@@ -139,44 +147,40 @@ public class World implements IDrawable {
 	}
 
 	private void paint(GC gc, Rectangle damagedRegion) {
-		boolean redrawAll = !initialPaint || mustRedrawAllObjects();
-
-		if (redrawAll) {
+		if (!initialPaint || mustRedrawAllObjects()) {
 			paint(doubleBuffer.getGC(), 0);
 			doubleBuffer.setDirty(true);
-		}
 
-		for (int pass = 0;; pass++) {
-			if (!paintObjects(pass, redrawAll)) {
-				break;
+			for (int pass = 0;; pass++) {
+				if (!paintObjects(pass)) {
+					break;
+				}
 			}
-		}
 
-		if (doubleBuffer.isDirty()) {
-			doubleBuffer.paint(gc, damagedRegion);
-			doubleBuffer.setDirty(false);
+			if (doubleBuffer.isDirty()) {
+				doubleBuffer.paint(gc, damagedRegion);
+				doubleBuffer.setDirty(false);
+			}
 		}
 	}
 
 	private boolean mustRedrawAllObjects() {
-		for (IActor actor : actors) {
-			if (actor.mustRedraw()) {
+		for (IDrawable drawable : drawables) {
+			if (drawable.mustRedraw()) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private boolean paintObjects(int pass, boolean force) {
+	private boolean paintObjects(int pass) {
 		boolean needMorePasses = false;
 		GC gc = doubleBuffer.getGC();
 		for (IDrawable drawable : drawables) {
-			if (force || drawable.mustRedraw()) {
-				if (drawable.paint(gc, pass)) {
-					needMorePasses = true;
-				}
-				doubleBuffer.setDirty(true);
+			if (drawable.paint(gc, pass)) {
+				needMorePasses = true;
 			}
+			doubleBuffer.setDirty(true);
 		}
 		return needMorePasses;
 	}
@@ -197,7 +201,6 @@ public class World implements IDrawable {
 	void add(IDrawable drawable) {
 		List<IDrawable> newDrawables = new ArrayList<>(Arrays.asList(drawables));
 		newDrawables.add(drawable);
-		Collections.sort(newDrawables, DrawableLayerComparator.INSTANCE);
 		drawables = newDrawables.toArray(new IDrawable[0]);
 
 		if (drawable instanceof IActor) {

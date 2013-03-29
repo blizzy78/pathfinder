@@ -59,6 +59,10 @@ public class TrafficLight implements IActor {
 	}
 
 	@Override
+	public void dispose() {
+	}
+
+	@Override
 	public boolean mustRedraw() {
 		return mustRedraw.get();
 	}

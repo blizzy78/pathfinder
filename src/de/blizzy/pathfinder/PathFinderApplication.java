@@ -19,14 +19,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-package de.blizzy.pathfinder.actor;
+package de.blizzy.pathfinder;
 
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Point;
+import org.eclipse.equinox.app.IApplication;
+import org.eclipse.equinox.app.IApplicationContext;
 
-public interface IDrawable {
-	boolean mustRedraw();
-	boolean paint(GC gc, int pass);
-	boolean contains(Point location);
-	void dispose();
+public class PathFinderApplication implements IApplication {
+	private PathFinder pathFinder;
+
+	@Override
+	public Object start(IApplicationContext context) {
+		pathFinder = new PathFinder();
+		pathFinder.run();
+		return null;
+	}
+
+	@Override
+	public void stop() {
+		pathFinder.stop();
+	}
 }

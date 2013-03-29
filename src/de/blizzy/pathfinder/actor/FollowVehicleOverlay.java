@@ -21,42 +21,63 @@ SOFTWARE.
 */
 package de.blizzy.pathfinder.actor;
 
+import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 
-public class Building implements IDrawable {
-	private static final RGB COLOR = new RGB(0, 175, 0);
+import de.blizzy.pathfinder.PathFinderPlugin;
 
-	private Area area;
-	private ColorRegistry colorRegistry;
+public class FollowVehicleOverlay implements IDrawable {
+	private Vehicle vehicle;
+	private Point lastLocation = new Point(-1, -1);
+	private World world;
+	private Image arrowNW;
 
-	public Building(World world, Area area) {
-		this.area = area;
-		colorRegistry = world.getColorRegistry();
+	public FollowVehicleOverlay(World world) {
+		this.world = world;
 
 		world.add(this);
 	}
 
 	@Override
 	public void dispose() {
+		if (arrowNW != null) {
+			arrowNW.dispose();
+		}
 	}
 
 	@Override
 	public boolean mustRedraw() {
-		// buildings do never change
-		return false;
+		return (vehicle != null) ? vehicle.contains(lastLocation) : false;
 	}
 
 	@Override
 	public boolean paint(GC gc, int pass) {
-		gc.setBackground(colorRegistry.getColor(COLOR));
-		gc.fillRectangle(area.getDrawArea());
+		initImages(gc);
+
+		lastLocation = vehicle.getLocation();
+		Area area = new Area(world, new Rectangle(lastLocation.x, lastLocation.y, 1, 1));
+		Rectangle drawArea = area.getDrawArea();
+		gc.drawImage(arrowNW, drawArea.x + World.CELL_PIXEL_SIZE - 2, drawArea.y + World.CELL_PIXEL_SIZE - 2);
+
 		return false;
+	}
+
+	private void initImages(GC gc) {
+		if (arrowNW == null) {
+			Device device = gc.getDevice();
+			arrowNW = PathFinderPlugin.getImageDescriptor("etc/icons/arrow_nw.png").createImage(device); //$NON-NLS-1$
+		}
 	}
 
 	@Override
 	public boolean contains(Point location) {
-		return area.contains(location);
+		return false;
+	}
+
+	public void setVehicle(Vehicle vehicle) {
+		this.vehicle = vehicle;
 	}
 }

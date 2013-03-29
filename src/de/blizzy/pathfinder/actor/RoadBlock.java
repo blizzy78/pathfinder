@@ -43,6 +43,10 @@ public class RoadBlock implements IActor {
 	}
 
 	@Override
+	public void dispose() {
+	}
+
+	@Override
 	public boolean mustRedraw() {
 		// road blocks do never change
 		return false;

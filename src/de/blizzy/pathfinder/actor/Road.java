@@ -79,6 +79,10 @@ public class Road implements IDrawable {
 	}
 
 	@Override
+	public void dispose() {
+	}
+
+	@Override
 	public boolean mustRedraw() {
 		// roads no never change
 		return false;

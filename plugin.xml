@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="de.blizzy.pathFinder"
+            name="PathFinder">
+      </product>
+   </extension>
+   <extension
+         id="de.blizzy.pathFinder"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="de.blizzy.pathfinder.PathFinderApplication">
+         </run>
+      </application>
+   </extension>
+
+</plugin>

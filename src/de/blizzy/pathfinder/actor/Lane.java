@@ -68,6 +68,10 @@ class Lane implements IDrawable {
 	}
 
 	@Override
+	public void dispose() {
+	}
+
+	@Override
 	public boolean mustRedraw() {
 		return false;
 	}
