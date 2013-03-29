@@ -32,9 +32,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.swt.SWT;
@@ -50,12 +47,6 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.blizzy.pathfinder.Direction;
 
@@ -81,8 +72,6 @@ public class World implements IDrawable {
 	private DoubleBuffer doubleBuffer;
 	private Map<Point, Set<Road>> roadsAtCache = new HashMap<>();
 	private Map<Point, Boolean> isRoadAtCache = new HashMap<>();
-	private ListeningExecutorService taskExecutor = MoreExecutors.listeningDecorator(Executors.newScheduledThreadPool(
-			8, new ThreadFactoryBuilder().setNameFormat("Task Executor (%d)").build())); //$NON-NLS-1$
 	private AtomicBoolean paused = new AtomicBoolean();
 
 	public World(Composite parent, int width, int height) {
@@ -140,12 +129,6 @@ public class World implements IDrawable {
 
 	private void dispose() {
 		timer.cancel();
-		try {
-			taskExecutor.shutdown();
-			taskExecutor.awaitTermination(30, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-			// ignore
-		}
 		doubleBuffer.dispose();
 		colorRegistry.dispose();
 	}
@@ -308,24 +291,8 @@ public class World implements IDrawable {
 	}
 
 	private void animateWorld() {
-		List<ListenableFuture<?>> futures = new ArrayList<>(Math.max(actors.length, 1));
-		for (final IActor actor : actors) {
-			Runnable runnable = new Runnable() {
-				@Override
-				public void run() {
-					actor.animate();
-				}
-			};
-			ListenableFuture<?> future = taskExecutor.submit(runnable);
-			futures.add(future);
-		}
-
-		try {
-			Futures.allAsList(futures).get();
-		} catch (InterruptedException e) {
-			// ignore
-		} catch (ExecutionException e) {
-			throw new RuntimeException(e.getCause());
+		for (IActor actor : actors) {
+			actor.animate();
 		}
 	}
 
