@@ -42,7 +42,6 @@ public class Vehicle implements IActor {
 
 	private static final RGB COLOR = new RGB(255, 255, 0);
 	private static final RGB PARK_COLOR = new RGB(255, 150, 0);
-	private static final int FRAMES_PER_STEP = 1;
 	private static final double CHANGE_DIRECTION_CHANCE = 0.05d;
 	private static final double PARK_CHANCE = 0.0005d;
 	private static final long PARK_DURATION = 8 * 1000;
@@ -55,6 +54,7 @@ public class Vehicle implements IActor {
 	private int frames;
 	private AtomicBoolean mustRedraw = new AtomicBoolean(true);
 	private long parkedTime;
+	private int framesPerStep = (int) (Math.random() * 4) + 2;
 
 	public Vehicle(World world, Point location) {
 		if (!world.isRoadAt(location)) {
@@ -76,8 +76,10 @@ public class Vehicle implements IActor {
 	@Override
 	public boolean paint(GC gc, int pass) {
 		Point location;
+		Mode mode;
 		synchronized (this) {
 			location = this.location;
+			mode = this.mode;
 		}
 		gc.setBackground(colorRegistry.getColor(mode == Mode.PARK ? PARK_COLOR : COLOR));
 		gc.fillRectangle(location.x * World.CELL_PIXEL_SIZE + location.x * World.CELL_SPACING + 1,
@@ -89,7 +91,7 @@ public class Vehicle implements IActor {
 
 	@Override
 	public void animate() {
-		if (frames++ >= FRAMES_PER_STEP) {
+		if (++frames >= framesPerStep) {
 			synchronized (this) {
 				switch (mode) {
 					case DRIVE:
