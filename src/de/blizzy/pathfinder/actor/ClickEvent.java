@@ -19,31 +19,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-package de.blizzy.pathfinder.route;
+package de.blizzy.pathfinder.actor;
 
-class TwoNodes {
-	private INode node1;
-	private INode node2;
+import java.util.EventObject;
 
-	TwoNodes(INode node1, INode node2) {
-		this.node1 = node1;
-		this.node2 = node2;
+import org.eclipse.swt.graphics.Point;
+
+public class ClickEvent extends EventObject {
+	private Point location;
+
+	ClickEvent(Object source, Point location) {
+		super(source);
+		this.location = location;
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		if (o == this) {
-			return true;
-		} else if ((o != null) && o.getClass().equals(getClass())) {
-			TwoNodes other = (TwoNodes) o;
-			return (other.node1.equals(node1) && other.node2.equals(node2)) ||
-					(other.node1.equals(node2) && other.node2.equals(node1));
-		}
-		return false;
-	}
-
-	@Override
-	public int hashCode() {
-		return node1.hashCode() ^ node2.hashCode();
+	public Point getLocation() {
+		return location;
 	}
 }

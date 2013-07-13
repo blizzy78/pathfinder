@@ -19,37 +19,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-package de.blizzy.pathfinder.route;
+package de.blizzy.pathfinder.actor;
 
-class Node {
-	private String name;
-
-	Node(String name) {
-		this.name = name;
-	}
-
-	String getName() {
-		return name;
-	}
-
-	@Override
-	public String toString() {
-		return name;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (o == this) {
-			return true;
-		} else if ((o != null) && o.getClass().equals(getClass())) {
-			Node other = (Node) o;
-			return other.name.equals(name);
-		}
-		return false;
-	}
-
-	@Override
-	public int hashCode() {
-		return name.hashCode();
-	}
+public interface IClickListener {
+	void click(ClickEvent event);
 }

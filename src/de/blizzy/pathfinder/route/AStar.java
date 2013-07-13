@@ -21,49 +21,46 @@ SOFTWARE.
 */
 package de.blizzy.pathfinder.route;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
-class AStar {
-	AStar() {
+public class AStar {
+	public AStar() {
 	}
 
-	List<Node> getShortestRoute(Node origin, Node target, IAStarFunctions function) {
-		final Map<Node, Integer> distancesFromOriginToTarget = Maps.newHashMap();
-		Map<Node, Integer> distancesFromOriginToNode = Maps.newHashMap();
-		Comparator<Node> openNodesComparator = new Comparator<Node>() {
+	public List<INode> getShortestRoute(INode origin, INode target, IAStarFunctions function) {
+		final Map<INode, Double> distancesFromOriginToTarget = new HashMap<>();
+		Map<INode, Double> distancesFromOriginToNode = new HashMap<>();
+		Comparator<INode> openNodesComparator = new Comparator<INode>() {
 			@Override
-			public int compare(Node n1, Node n2) {
-				Integer d1 = distancesFromOriginToTarget.get(n1);
+			public int compare(INode n1, INode n2) {
+				Double d1 = distancesFromOriginToTarget.get(n1);
 				if (d1 == null) {
-					d1 = 0;
+					d1 = 0d;
 				}
-				Integer d2 = distancesFromOriginToTarget.get(n2);
+				Double d2 = distancesFromOriginToTarget.get(n2);
 				if (d2 == null) {
-					d2 = 0;
+					d2 = 0d;
 				}
 				return d1.compareTo(d2);
 			}
 		};
-		SortedSet<Node> openNodes = new TreeSet<>(openNodesComparator);
-		Set<Node> closedNodes = Sets.newHashSet(origin);
-		Map<Node, Node> predecessors = Maps.newHashMap();
+		List<INode> openNodes = new ArrayList<>();
+		Set<INode> closedNodes = new HashSet<>();
+		closedNodes.add(origin);
+		Map<INode, INode> predecessors = new HashMap<>();
 
-		distancesFromOriginToNode.put(origin, 0);
+		distancesFromOriginToNode.put(origin, 0d);
 		openNodes.add(origin);
 
 		do {
-			Node currentNode = openNodes.first();
-			openNodes.remove(currentNode);
+			INode currentNode = openNodes.remove(0);
 			distancesFromOriginToTarget.remove(currentNode);
 
 			if (currentNode.equals(target)) {
@@ -73,22 +70,23 @@ class AStar {
 			closedNodes.add(currentNode);
 
 			expandNode(currentNode, function, distancesFromOriginToTarget, distancesFromOriginToNode,
-					openNodes, closedNodes, predecessors);
+					openNodes, openNodesComparator, closedNodes, predecessors);
 		} while (!openNodes.isEmpty());
 
 		return null;
 	}
 
-	private void expandNode(Node currentNode, IAStarFunctions function, Map<Node, Integer> distancesFromOriginToTarget,
-			Map<Node, Integer> distancesFromOriginToNode, Set<Node> openNodes, Set<Node> closedNodes, Map<Node, Node> predecessors) {
+	private void expandNode(INode currentNode, IAStarFunctions function, Map<INode, Double> distancesFromOriginToTarget,
+			Map<INode, Double> distancesFromOriginToNode, List<INode> openNodes, Comparator<INode> openNodesComparator,
+			Set<INode> closedNodes, Map<INode, INode> predecessors) {
 
-		for (Node successor : function.getAdjacentNodes(currentNode)) {
+		for (INode successor : function.getAdjacentNodes(currentNode)) {
 			if (closedNodes.contains(successor)) {
 				continue;
 			}
 
-			int distanceFromCurrentToSuccessor = function.getDistance(currentNode, successor);
-			int newDistanceFromOriginToSuccessor = distancesFromOriginToNode.get(currentNode) + distanceFromCurrentToSuccessor;
+			double distanceFromCurrentToSuccessor = function.getDistance(currentNode, successor);
+			double newDistanceFromOriginToSuccessor = distancesFromOriginToNode.get(currentNode) + distanceFromCurrentToSuccessor;
 
 			boolean open = openNodes.contains(successor);
 			if (open && (newDistanceFromOriginToSuccessor >= distancesFromOriginToNode.get(successor))) {
@@ -98,18 +96,19 @@ class AStar {
 			predecessors.put(successor, currentNode);
 			distancesFromOriginToNode.put(successor, newDistanceFromOriginToSuccessor);
 
-			int estimatedDistanceFromSuccessorToTarget = function.getEstimatedDistanceToTarget(successor);
-			int newDistanceFromOriginToTarget = newDistanceFromOriginToSuccessor + estimatedDistanceFromSuccessorToTarget;
+			double estimatedDistanceFromSuccessorToTarget = function.getEstimatedDistanceToTarget(successor);
+			double newDistanceFromOriginToTarget = newDistanceFromOriginToSuccessor + estimatedDistanceFromSuccessorToTarget;
 			distancesFromOriginToTarget.put(successor, newDistanceFromOriginToTarget);
 			if (!open) {
 				openNodes.add(successor);
+				Collections.sort(openNodes, openNodesComparator);
 			}
 		}
 	}
 
-	private List<Node> toRoute(Node target, Map<Node, Node> predecessors) {
-		List<Node> route = Lists.newArrayList();
-		Node node = target;
+	private List<INode> toRoute(INode target, Map<INode, INode> predecessors) {
+		List<INode> route = new ArrayList<>();
+		INode node = target;
 		while (node != null) {
 			route.add(node);
 			node = predecessors.get(node);

@@ -21,13 +21,17 @@ SOFTWARE.
 */
 package de.blizzy.pathfinder.route;
 
-class TwoNodes {
-	private INode node1;
-	private INode node2;
+import org.eclipse.swt.graphics.Point;
 
-	TwoNodes(INode node1, INode node2) {
-		this.node1 = node1;
-		this.node2 = node2;
+public class RouteNode implements INode {
+	private Point location;
+
+	public RouteNode(Point location) {
+		this.location = location;
+	}
+
+	public Point getLocation() {
+		return location;
 	}
 
 	@Override
@@ -35,15 +39,14 @@ class TwoNodes {
 		if (o == this) {
 			return true;
 		} else if ((o != null) && o.getClass().equals(getClass())) {
-			TwoNodes other = (TwoNodes) o;
-			return (other.node1.equals(node1) && other.node2.equals(node2)) ||
-					(other.node1.equals(node2) && other.node2.equals(node1));
+			RouteNode other = (RouteNode) o;
+			return other.location.equals(location);
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return node1.hashCode() ^ node2.hashCode();
+		return location.hashCode();
 	}
 }

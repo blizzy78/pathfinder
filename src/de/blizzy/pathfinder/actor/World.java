@@ -37,6 +37,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
@@ -48,7 +50,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+
 import de.blizzy.pathfinder.Direction;
+import de.blizzy.pathfinder.route.AStar;
+import de.blizzy.pathfinder.route.IAStarFunctions;
+import de.blizzy.pathfinder.route.INode;
+import de.blizzy.pathfinder.route.RouteNode;
 
 public class World implements IDrawable {
 	static final int ANIMATION_FRAMES_PER_SECOND = 100;
@@ -73,6 +82,7 @@ public class World implements IDrawable {
 	private Map<Point, Set<Road>> roadsAtCache = new HashMap<>();
 	private Map<Point, Boolean> isRoadAtCache = new HashMap<>();
 	private AtomicBoolean paused = new AtomicBoolean();
+	private List<IClickListener> clickListeners = new ArrayList<>();
 
 	public World(Composite parent, int width, int height) {
 		this.width = width;
@@ -93,6 +103,13 @@ public class World implements IDrawable {
 			@Override
 			public void widgetDisposed(DisposeEvent e) {
 				handleDispose();
+			}
+		});
+		canvas.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent e) {
+				Point location = new Point(e.x / (CELL_PIXEL_SIZE + CELL_SPACING), e.y / (CELL_PIXEL_SIZE + CELL_SPACING));
+				fireClick(location);
 			}
 		});
 
@@ -201,6 +218,7 @@ public class World implements IDrawable {
 	void add(IDrawable drawable) {
 		List<IDrawable> newDrawables = new ArrayList<>(Arrays.asList(drawables));
 		newDrawables.add(drawable);
+		Collections.sort(newDrawables, DrawableLayerComparator.INSTANCE);
 		drawables = newDrawables.toArray(new IDrawable[0]);
 
 		if (drawable instanceof IActor) {
@@ -227,9 +245,9 @@ public class World implements IDrawable {
 		return colorRegistry;
 	}
 
-	EnumSet<Direction> getPossibleDirectionsAt(Point location) {
+	public EnumSet<Direction> getPossibleDirectionsAt(Point location) {
 		if (!contains(location)) {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("location not within world: " + location); //$NON-NLS-1$
 		}
 
 		if (!isRoadAt(location)) {
@@ -287,7 +305,7 @@ public class World implements IDrawable {
 						break;
 					}
 				}
-				isRoadAtCache.put(location, true);
+				isRoadAtCache.put(location, isRoad);
 			}
 			return isRoad;
 		}
@@ -360,7 +378,92 @@ public class World implements IDrawable {
 		this.paused.set(paused);
 	}
 
+	public void addClickListener(IClickListener listener) {
+		synchronized (clickListeners) {
+			clickListeners.add(listener);
+		}
+	}
+
+	public void removeClickListener(IClickListener listener) {
+		synchronized (clickListeners) {
+			clickListeners.remove(listener);
+		}
+	}
+
+	private void fireClick(Point location) {
+		List<IClickListener> listeners;
+		synchronized (clickListeners) {
+			listeners = new ArrayList<>(clickListeners);
+		}
+		ClickEvent event = new ClickEvent(this, location);
+		for (IClickListener listener : listeners) {
+			listener.click(event);
+		}
+	}
+
 	TrafficDensity getTrafficDensity() {
 		return trafficDensity;
+	}
+
+	public List<Point> getShortestRoute(Point originLocation, final Point targetLocation) {
+		RouteNode origin = new RouteNode(originLocation);
+		RouteNode target = new RouteNode(targetLocation);
+		IAStarFunctions aStarFunctions = new IAStarFunctions() {
+			@Override
+			public double getEstimatedDistanceToTarget(INode node) {
+				RouteNode routeNode = (RouteNode) node;
+				Point location = routeNode.getLocation();
+				int x = Math.abs(targetLocation.x - location.x);
+				int y = Math.abs(targetLocation.y - location.y);
+				return Math.sqrt(Math.pow(x, 2d) + Math.pow(y, 2d));
+			}
+
+			@Override
+			public double getDistance(INode node1, INode node2) {
+				return 1d;
+			}
+
+			@Override
+			public Set<INode> getAdjacentNodes(INode node) {
+				RouteNode routeNode = (RouteNode) node;
+				final Point location = routeNode.getLocation();
+				EnumSet<Direction> directions = getPossibleDirectionsAt(location);
+				Function<Direction, INode> function = new Function<Direction, INode>() {
+					@Override
+					public INode apply(Direction direction) {
+						switch (direction) {
+							case NORTH:
+								return new RouteNode(new Point(location.x, location.y - 1));
+							case SOUTH:
+								return new RouteNode(new Point(location.x, location.y + 1));
+							case EAST:
+								return new RouteNode(new Point(location.x + 1, location.y));
+							case WEST:
+								return new RouteNode(new Point(location.x - 1, location.y));
+							default:
+								throw new IllegalArgumentException("unknown direction: " + direction); //$NON-NLS-1$
+						}
+					}
+				};
+				return new HashSet<>(Lists.transform(new ArrayList<>(directions), function));
+			}
+		};
+		List<INode> route = new AStar().getShortestRoute(origin, target, aStarFunctions);
+		if (route != null) {
+			Function<INode, Point> function = new Function<INode, Point>() {
+				@Override
+				public Point apply(INode node) {
+					return ((RouteNode) node).getLocation();
+				}
+			};
+			return new ArrayList<>(Lists.transform(route, function));
+		} else {
+			return null;
+		}
+	}
+
+	public void redraw() {
+		initialPaint = true;
+		canvas.redraw();
 	}
 }

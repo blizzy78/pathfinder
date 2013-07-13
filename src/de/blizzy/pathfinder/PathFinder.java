@@ -21,6 +21,8 @@ SOFTWARE.
 */
 package de.blizzy.pathfinder;
 
+import java.util.List;
+
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
@@ -39,9 +41,12 @@ import org.eclipse.swt.widgets.Shell;
 
 import de.blizzy.pathfinder.actor.Area;
 import de.blizzy.pathfinder.actor.Building;
+import de.blizzy.pathfinder.actor.ClickEvent;
 import de.blizzy.pathfinder.actor.FollowVehicleOverlay;
+import de.blizzy.pathfinder.actor.IClickListener;
 import de.blizzy.pathfinder.actor.Road;
 import de.blizzy.pathfinder.actor.RoadBlock;
+import de.blizzy.pathfinder.actor.RouteOverlay;
 import de.blizzy.pathfinder.actor.TrafficDensityOverlay;
 import de.blizzy.pathfinder.actor.TrafficLight;
 import de.blizzy.pathfinder.actor.Vehicle;
@@ -50,6 +55,8 @@ import de.blizzy.pathfinder.actor.World;
 class PathFinder {
 	private boolean running = true;
 	private Display display;
+	private Point startLocation;
+	private RouteOverlay routeOverlay;
 
 	void run() {
 		display = Display.getDefault();
@@ -88,6 +95,7 @@ class PathFinder {
 					display.sleep();
 				}
 			} catch (RuntimeException e) {
+				e.printStackTrace();
 			}
 		}
 
@@ -108,6 +116,13 @@ class PathFinder {
 		pauseButton.setText("Pause"); //$NON-NLS-1$
 
 		composite.setLayout(GridLayoutFactory.swtDefaults().margins(0, 0).create());
+
+		world.addClickListener(new IClickListener() {
+			@Override
+			public void click(ClickEvent event) {
+				handleClick(event.getLocation(), world);
+			}
+		});
 
 		pauseButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -170,11 +185,26 @@ class PathFinder {
 		FollowVehicleOverlay followVehicleOverlay = new FollowVehicleOverlay(world);
 		followVehicleOverlay.setVehicle(firstVehicle);
 
+		routeOverlay = new RouteOverlay(world);
+
 		return world;
 	}
 
 	void stop() {
 		running = false;
 		display.wake();
+	}
+
+	private void handleClick(Point location, World world) {
+		if (startLocation == null) {
+			startLocation = location;
+		} else {
+			Point startLocation = this.startLocation;
+			this.startLocation = null;
+			Point endLocation = location;
+			List<Point> route = world.getShortestRoute(startLocation, endLocation);
+			routeOverlay.setRoute(route);
+			world.redraw();
+		}
 	}
 }

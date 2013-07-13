@@ -23,8 +23,8 @@ package de.blizzy.pathfinder.route;
 
 import java.util.Set;
 
-interface IAStarFunctions {
-	int getEstimatedDistanceToTarget(Node node);
-	int getDistance(Node node1, Node node2);
-	Set<Node> getAdjacentNodes(Node node);
+public interface IAStarFunctions {
+	double getEstimatedDistanceToTarget(INode node);
+	double getDistance(INode node1, INode node2);
+	Set<INode> getAdjacentNodes(INode node);
 }
