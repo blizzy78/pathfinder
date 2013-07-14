@@ -31,7 +31,8 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 
 public class RouteOverlay implements IDrawable {
-	private static final RGB COLOR = new RGB(255, 0, 0);
+	private static final RGB COLOR = new RGB(100, 100, 255);
+	private static final int ALPHA = 100;
 
 	private World world;
 	private ColorRegistry colorRegistry;
@@ -60,11 +61,14 @@ public class RouteOverlay implements IDrawable {
 		if (route != null) {
 			Color color = colorRegistry.getColor(COLOR);
 			gc.setBackground(color);
+			int oldAlpha = gc.getAlpha();
+			gc.setAlpha(ALPHA);
 			for (Point location : route) {
 				Area area = new Area(world, new Rectangle(location.x, location.y, 1, 1));
 				Rectangle drawArea = area.getDrawArea();
 				gc.fillRectangle(drawArea);
 			}
+			gc.setAlpha(oldAlpha);
 			mustRedraw.set(false);
 		}
 		return false;

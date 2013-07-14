@@ -34,7 +34,7 @@ final class TrafficUtil {
 	}
 
 	static Map<Direction, Point> getPossibleDirections(Point location, Direction headedTo,
-			boolean checkBlocks, boolean blocked, World world) {
+			boolean checkTrafficLights, boolean checkRoadBlocks, boolean checkVehicles, boolean blocked, World world) {
 
 		Map<Direction, Point> directions = new HashMap<>(4);
 		Point newLocation;
@@ -42,7 +42,8 @@ final class TrafficUtil {
 			newLocation = new Point(location.x, location.y - 1);
 			if (isRoad(newLocation, world) &&
 				isRightSideOfRoad(newLocation, Direction.NORTH, world) &&
-				(!checkBlocks || (world.isRoadBlockedAt(newLocation, Direction.SOUTH, location) == blocked))) {
+				(world.isRoadBlockedAt(newLocation, Direction.SOUTH, location,
+						checkTrafficLights, checkRoadBlocks, checkVehicles) == blocked)) {
 
 				directions.put(Direction.NORTH, newLocation);
 			}
@@ -51,7 +52,8 @@ final class TrafficUtil {
 			newLocation = new Point(location.x - 1, location.y);
 			if (isRoad(newLocation, world) &&
 				isRightSideOfRoad(newLocation, Direction.WEST, world) &&
-				(!checkBlocks || (world.isRoadBlockedAt(newLocation, Direction.EAST, location) == blocked))) {
+				(world.isRoadBlockedAt(newLocation, Direction.EAST, location,
+						checkTrafficLights, checkRoadBlocks, checkVehicles) == blocked)) {
 
 				directions.put(Direction.WEST, newLocation);
 			}
@@ -60,7 +62,8 @@ final class TrafficUtil {
 			newLocation = new Point(location.x, location.y + 1);
 			if (isRoad(newLocation, world) &&
 				isRightSideOfRoad(newLocation, Direction.SOUTH, world) &&
-				(!checkBlocks || (world.isRoadBlockedAt(newLocation, Direction.NORTH, location) == blocked))) {
+				(world.isRoadBlockedAt(newLocation, Direction.NORTH, location,
+						checkTrafficLights, checkRoadBlocks, checkVehicles) == blocked)) {
 
 				directions.put(Direction.SOUTH, newLocation);
 			}
@@ -69,7 +72,8 @@ final class TrafficUtil {
 			newLocation = new Point(location.x + 1, location.y);
 			if (isRoad(newLocation, world) &&
 				isRightSideOfRoad(newLocation, Direction.EAST, world) &&
-				(!checkBlocks || (world.isRoadBlockedAt(newLocation, Direction.WEST, location) == blocked))) {
+				(world.isRoadBlockedAt(newLocation, Direction.WEST, location,
+						checkTrafficLights, checkRoadBlocks, checkVehicles) == blocked)) {
 
 				directions.put(Direction.EAST, newLocation);
 			}

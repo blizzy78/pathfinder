@@ -127,9 +127,11 @@ public class Vehicle implements IActor {
 			return;
 		}
 
-		Map<Direction, Point> blockedDirections = TrafficUtil.getPossibleDirections(location, headedTo, true, true, world);
+		Map<Direction, Point> blockedDirections = TrafficUtil.getPossibleDirections(
+				location, headedTo, true, true, true, true, world);
 		boolean couldGoInSameDirection = blockedDirections.containsKey(headedTo);
-		Map<Direction, Point> possibleDirections = TrafficUtil.getPossibleDirections(location, headedTo, true, false, world);
+		Map<Direction, Point> possibleDirections = TrafficUtil.getPossibleDirections(
+				location, headedTo, true, true, true, false, world);
 		boolean canGoInSameDirection = possibleDirections.containsKey(headedTo);
 		boolean changeDirection = Math.random() < CHANGE_DIRECTION_CHANCE;
 		Point newLocation = null;
@@ -161,7 +163,7 @@ public class Vehicle implements IActor {
 			}
 			if (!TrafficUtil.isRoad(newLocation, world) ||
 				!TrafficUtil.isRightSideOfRoad(newLocation, headedTo, world) ||
-				world.isRoadBlockedAt(newLocation, comingFrom, location)) {
+				world.isRoadBlockedAt(newLocation, comingFrom, location, true, true, true)) {
 
 				newLocation = null;
 			}

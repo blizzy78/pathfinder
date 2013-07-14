@@ -205,7 +205,10 @@ public class World implements IDrawable {
 	@Override
 	public boolean paint(GC gc, int pass) {
 		gc.setBackground(colorRegistry.getColor(COLOR));
-		gc.fillRectangle(0, 0, width * CELL_PIXEL_SIZE + (width - 1) * CELL_SPACING, height * CELL_PIXEL_SIZE + (height - 1) * CELL_SPACING);
+		gc.fillRectangle(
+			0, 0,
+			width * CELL_PIXEL_SIZE + (width - 1) * CELL_SPACING,
+			height * CELL_PIXEL_SIZE + (height - 1) * CELL_SPACING);
 		return false;
 	}
 
@@ -316,14 +319,26 @@ public class World implements IDrawable {
 		return height;
 	}
 
-	boolean isRoadBlockedAt(Point location, Direction comingFrom, Point currentLocation) {
+	boolean isRoadBlockedAt(Point location, Direction comingFrom, Point currentLocation, boolean checkTrafficLights,
+			boolean checkRoadBlocks, boolean checkVehicles) {
+
 		for (IActor actor : actors) {
 			if (actor instanceof TrafficLight) {
-				TrafficLight trafficLight = (TrafficLight) actor;
-				if (!trafficLight.contains(currentLocation)) {
-					if (trafficLight.contains(location) && !trafficLight.isAllowed(comingFrom)) {
-						return true;
+				if (checkTrafficLights) {
+					TrafficLight trafficLight = (TrafficLight) actor;
+					if (!trafficLight.contains(currentLocation)) {
+						if (trafficLight.contains(location) && !trafficLight.isAllowed(comingFrom)) {
+							return true;
+						}
 					}
+				}
+			} else if (actor instanceof RoadBlock) {
+				if (checkRoadBlocks && actor.contains(location)) {
+					return true;
+				}
+			} else if (actor instanceof Vehicle) {
+				if (checkVehicles && actor.contains(location)) {
+					return true;
 				}
 			} else if (actor.canBlockRoad() && actor.contains(location)) {
 				return true;
@@ -407,7 +422,7 @@ public class World implements IDrawable {
 					headedTo = Direction.getHeadedTo(precedingLocation, location);
 				}
 				Collection<Point> possibleDirections = TrafficUtil.getPossibleDirections(
-						location, headedTo, false, false, World.this).values();
+						location, headedTo, false, true, false, false, World.this).values();
 				Set<INode> successors = new HashSet<>();
 				for (Point successorLocation : possibleDirections) {
 					successors.add(new RouteNode(successorLocation));
