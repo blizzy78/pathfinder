@@ -32,7 +32,7 @@ import org.eclipse.swt.graphics.Rectangle;
 
 public class RouteOverlay implements IDrawable {
 	private static final RGB COLOR = new RGB(100, 100, 255);
-	private static final int ALPHA = 100;
+	private static final int ALPHA = 200;
 
 	private World world;
 	private ColorRegistry colorRegistry;
