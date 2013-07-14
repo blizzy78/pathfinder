@@ -23,8 +23,8 @@ package de.blizzy.pathfinder.actor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -245,31 +245,6 @@ public class World implements IDrawable {
 		return colorRegistry;
 	}
 
-	public EnumSet<Direction> getPossibleDirectionsAt(Point location) {
-		if (!contains(location)) {
-			throw new IllegalArgumentException("location not within world: " + location); //$NON-NLS-1$
-		}
-
-		if (!isRoadAt(location)) {
-			throw new IllegalArgumentException("location must be on a road"); //$NON-NLS-1$
-		}
-
-		EnumSet<Direction> directions = EnumSet.noneOf(Direction.class);
-		if ((location.y > 0) && isRoadAt(new Point(location.x, location.y - 1))) {
-			directions.add(Direction.NORTH);
-		}
-		if ((location.x > 0) && isRoadAt(new Point(location.x - 1, location.y))) {
-			directions.add(Direction.WEST);
-		}
-		if ((location.y < (height - 1)) && isRoadAt(new Point(location.x, location.y + 1))) {
-			directions.add(Direction.SOUTH);
-		}
-		if ((location.x < (width - 1)) && isRoadAt(new Point(location.x + 1, location.y))) {
-			directions.add(Direction.EAST);
-		}
-		return directions;
-	}
-
 	Set<Road> getRoadsAt(Point location) {
 		synchronized (roadsAtCache) {
 			Set<Road> roads = roadsAtCache.get(location);
@@ -424,28 +399,20 @@ public class World implements IDrawable {
 			}
 
 			@Override
-			public Set<INode> getAdjacentNodes(INode node) {
-				RouteNode routeNode = (RouteNode) node;
-				final Point location = routeNode.getLocation();
-				EnumSet<Direction> directions = getPossibleDirectionsAt(location);
-				Function<Direction, INode> function = new Function<Direction, INode>() {
-					@Override
-					public INode apply(Direction direction) {
-						switch (direction) {
-							case NORTH:
-								return new RouteNode(new Point(location.x, location.y - 1));
-							case SOUTH:
-								return new RouteNode(new Point(location.x, location.y + 1));
-							case EAST:
-								return new RouteNode(new Point(location.x + 1, location.y));
-							case WEST:
-								return new RouteNode(new Point(location.x - 1, location.y));
-							default:
-								throw new IllegalArgumentException("unknown direction: " + direction); //$NON-NLS-1$
-						}
-					}
-				};
-				return new HashSet<>(Lists.transform(new ArrayList<>(directions), function));
+			public Set<INode> getAdjacentNodes(INode node, INode precedingNode) {
+				Point location = ((RouteNode) node).getLocation();
+				Direction headedTo = null;
+				if (precedingNode != null) {
+					Point precedingLocation = ((RouteNode) precedingNode).getLocation();
+					headedTo = Direction.getHeadedTo(precedingLocation, location);
+				}
+				Collection<Point> possibleDirections = TrafficUtil.getPossibleDirections(
+						location, headedTo, false, false, World.this).values();
+				Set<INode> successors = new HashSet<>();
+				for (Point successorLocation : possibleDirections) {
+					successors.add(new RouteNode(successorLocation));
+				}
+				return successors;
 			}
 		};
 		List<INode> route = new AStar().getShortestRoute(origin, target, aStarFunctions);

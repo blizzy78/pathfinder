@@ -21,20 +21,34 @@ SOFTWARE.
 */
 package de.blizzy.pathfinder;
 
+import org.eclipse.swt.graphics.Point;
+
 public enum Direction {
 	NORTH, WEST, SOUTH, EAST;
 
-	public Direction opposite() {
-		switch (this) {
-			case NORTH:
-				return SOUTH;
-			case WEST:
-				return EAST;
-			case SOUTH:
+	public static Direction getHeadedTo(Point origin, Point target) {
+		int originX = origin.x;
+		int originY = origin.y;
+		int targetX = target.x;
+		int targetY = target.y;
+		if (originX == targetX) {
+			if (originY > targetY) {
 				return NORTH;
-			case EAST:
+			} else if (originY < targetY) {
+				return SOUTH;
+			} else {
+				throw new IllegalArgumentException("locations must be adjacent to one another"); //$NON-NLS-1$
+			}
+		} else if (originY == targetY) {
+			if (originX > targetX) {
 				return WEST;
+			} else if (originX < targetX) {
+				return EAST;
+			} else {
+				throw new IllegalArgumentException("locations must be adjacent to one another"); //$NON-NLS-1$
+			}
+		} else {
+			throw new IllegalArgumentException("locations must be adjacent to one another"); //$NON-NLS-1$
 		}
-		throw new RuntimeException();
 	}
 }

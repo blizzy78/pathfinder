@@ -80,7 +80,8 @@ public class AStar {
 			Map<INode, Double> distancesFromOriginToNode, List<INode> openNodes, Comparator<INode> openNodesComparator,
 			Set<INode> closedNodes, Map<INode, INode> predecessors) {
 
-		for (INode successor : function.getAdjacentNodes(currentNode)) {
+		INode predecessorOfCurrentNode = predecessors.get(currentNode);
+		for (INode successor : function.getAdjacentNodes(currentNode, predecessorOfCurrentNode)) {
 			if (closedNodes.contains(successor)) {
 				continue;
 			}

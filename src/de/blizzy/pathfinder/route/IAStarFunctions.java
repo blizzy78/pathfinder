@@ -26,5 +26,5 @@ import java.util.Set;
 public interface IAStarFunctions {
 	double getEstimatedDistanceToTarget(INode node);
 	double getDistance(INode node1, INode node2);
-	Set<INode> getAdjacentNodes(INode node);
+	Set<INode> getAdjacentNodes(INode node, INode precedingNode);
 }

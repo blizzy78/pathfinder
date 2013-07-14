@@ -23,7 +23,6 @@ package de.blizzy.pathfinder.actor;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -128,9 +127,9 @@ public class Vehicle implements IActor {
 			return;
 		}
 
-		Map<Direction, Point> blockedDirections = getPossibleDirections(location, true);
+		Map<Direction, Point> blockedDirections = TrafficUtil.getPossibleDirections(location, headedTo, true, true, world);
 		boolean couldGoInSameDirection = blockedDirections.containsKey(headedTo);
-		Map<Direction, Point> possibleDirections = getPossibleDirections(location, false);
+		Map<Direction, Point> possibleDirections = TrafficUtil.getPossibleDirections(location, headedTo, true, false, world);
 		boolean canGoInSameDirection = possibleDirections.containsKey(headedTo);
 		boolean changeDirection = Math.random() < CHANGE_DIRECTION_CHANCE;
 		Point newLocation = null;
@@ -160,8 +159,8 @@ public class Vehicle implements IActor {
 				default:
 					throw new IllegalStateException();
 			}
-			if (!isRoad(newLocation) ||
-				!isRightSideOfRoad(newLocation, headedTo) ||
+			if (!TrafficUtil.isRoad(newLocation, world) ||
+				!TrafficUtil.isRightSideOfRoad(newLocation, headedTo, world) ||
 				world.isRoadBlockedAt(newLocation, comingFrom, location)) {
 
 				newLocation = null;
@@ -197,64 +196,6 @@ public class Vehicle implements IActor {
 			mode = Mode.DRIVE;
 			mustRedraw.set(true);
 		}
-	}
-
-	private Map<Direction, Point> getPossibleDirections(Point location, boolean blocked) {
-		Map<Direction, Point> directions = new HashMap<>(4);
-		Point newLocation;
-		if (headedTo != Direction.SOUTH) {
-			newLocation = new Point(location.x, location.y - 1);
-			if (isRoad(newLocation) &&
-				isRightSideOfRoad(newLocation, Direction.NORTH) &&
-				(world.isRoadBlockedAt(newLocation, Direction.SOUTH, location) == blocked)) {
-
-				directions.put(Direction.NORTH, newLocation);
-			}
-		}
-		if (headedTo != Direction.EAST) {
-			newLocation = new Point(location.x - 1, location.y);
-			if (isRoad(newLocation) &&
-				isRightSideOfRoad(newLocation, Direction.WEST) &&
-				(world.isRoadBlockedAt(newLocation, Direction.EAST, location) == blocked)) {
-
-				directions.put(Direction.WEST, newLocation);
-			}
-		}
-		if (headedTo != Direction.NORTH) {
-			newLocation = new Point(location.x, location.y + 1);
-			if (isRoad(newLocation) &&
-				isRightSideOfRoad(newLocation, Direction.SOUTH) &&
-				(world.isRoadBlockedAt(newLocation, Direction.NORTH, location) == blocked)) {
-
-				directions.put(Direction.SOUTH, newLocation);
-			}
-		}
-		if (headedTo != Direction.WEST) {
-			newLocation = new Point(location.x + 1, location.y);
-			if (isRoad(newLocation) &&
-				isRightSideOfRoad(newLocation, Direction.EAST) &&
-				(world.isRoadBlockedAt(newLocation, Direction.WEST, location) == blocked)) {
-
-				directions.put(Direction.EAST, newLocation);
-			}
-		}
-		return directions;
-	}
-
-	private boolean isRoad(Point location) {
-		return world.contains(location) && world.isRoadAt(location);
-	}
-
-	private boolean isRightSideOfRoad(Point location, Direction headedTo) {
-		if (!isRoad(location)) {
-			return false;
-		}
-		for (Road road : world.getRoadsAt(location)) {
-			if (road.isRightSide(location, headedTo)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	@Override
